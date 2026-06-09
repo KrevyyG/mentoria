@@ -1,4 +1,4 @@
-# Design do Back-end — App de Tarefas
+# Design do Back-end — QAlificado - To Do
 
 Este documento descreve COMO o servidor cumpre o contrato (03-contrato-api.md).
 O quê e por quê já estão definidos; aqui entram as escolhas técnicas.
@@ -185,7 +185,52 @@ um ping diário automático (ex.: GitHub Actions) mantém o projeto ativo.
 Nenhum segredo vai para o código; tudo via arquivo .env (fora do controle
 de versão).
 
-## 11. Decisões registradas (revisáveis)
+## 11. Documentação da API (Swagger / OpenAPI)
+
+O back publica a especificação OpenAPI 3 e uma UI interativa para explorar
+e testar as rotas durante o desenvolvimento.
+
+Endereços:
+- /api/docs       UI interativa (Swagger UI)
+- /api/docs-json  documento OpenAPI cru
+
+Setup, em main.ts, depois do prefixo /api e dos pipes/filtros globais:
+
+    const config = new DocumentBuilder()
+      .setTitle('QAlificado - To Do')
+      .setDescription('API multiusuário para gerenciar tarefas e categorias.')
+      .setVersion('1.0')
+      .addBearerAuth(
+        { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+        'jwt',
+      )
+      .build()
+    const documento = SwaggerModule.createDocument(app, config)
+    SwaggerModule.setup('api/docs', app, documento, {
+      swaggerOptions: { persistAuthorization: true },
+    })
+
+Convenção de anotação (vale para TODO endpoint novo):
+
+- Controller anotado com @ApiTags('<recurso>') (ex.: 'auth', 'tarefas',
+  'categorias')
+- Cada método com @ApiOperation({ summary: '... (HU-xx)' })
+- Cada resposta possível com @ApiResponse({ status, description, type }):
+  - sucesso: o DTO de resposta (ex.: TarefaDto, RespostaLoginDto)
+  - erro: RespostaErroDto (src/common/swagger/respostas-erro.ts)
+- Rotas protegidas (JwtAuthGuard) também recebem @ApiBearerAuth('jwt') para
+  que a UI envie o token nos "Try it out"
+- DTOs de entrada e de resposta anotam cada campo com @ApiProperty,
+  incluindo exemplo e formato (ex.: format: 'uuid') quando ajudar
+
+DTOs de resposta vivem junto do recurso (ex.: src/auth/dto/respostas.dto.ts)
+ou em src/common/swagger/ quando forem reutilizados (caso do RespostaErroDto).
+
+Os decorators do class-validator (IsEmail, MinLength, ...) já são lidos pelo
+@nestjs/swagger e viram parte do schema — não duplique a regra no
+@ApiProperty; deixe a validação como fonte da verdade.
+
+## 12. Decisões registradas (revisáveis)
 
 - DR-01: Hash com argon2 em vez de bcrypt. Argon2 é o algoritmo recomendado
   atualmente (resistente a ataque por hardware). bcrypt seria aceitável.
@@ -199,7 +244,7 @@ de versão).
   poderia gerar via gen_random_uuid(); a escolha pelo Prisma mantém a
   geração visível no schema.
 
-## 12. Fora de escopo (deste design)
+## 13. Fora de escopo (deste design)
 
 - Deploy/hospedagem da API (estudo roda local)
 - Refresh tokens e revogação de token

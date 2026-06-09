@@ -1,4 +1,4 @@
-# Identidade Visual — App de Tarefas (QA)
+# Identidade Visual — QAlificado - To Do
 
 Referência de marca do projeto. O 05-design-front.md consome estes tokens;
 nenhum hex deve ser escrito direto nos componentes.

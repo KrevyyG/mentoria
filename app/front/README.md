@@ -1,73 +1,89 @@
-# React + TypeScript + Vite
+# QAlificado - To Do — Front
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicação React do app QAlificado - To Do. Consome a API NestJS do `../back`.
 
-Currently, two official plugins are available:
+A verdade do projeto vive em `../specs/`. Este README cobre só o que é
+preciso para rodar e navegar o código.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+- React 19 + Vite + TypeScript
+- React Router (navegação)
+- TanStack Query (estado do servidor)
+- fetch direto (cliente HTTP tipado em `src/api/client.ts`)
+- Token JWT no localStorage
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Rodar local
 
-## Expanding the ESLint configuration
+Pré-requisitos: Node 20+ e o back rodando em http://localhost:3000.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+    cp .env.example .env
+    # VITE_API_URL padrão já aponta para o back local
+    npm install
+    npm run dev
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+App em http://localhost:5173.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Estrutura
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+    src/
+      main.tsx                envolve App em QueryClientProvider e tokens.css
+      App.tsx                 rotas; envolve com AuthProvider e RotaProtegida
+      api/
+        client.ts             base URL, Bearer, tratamento de 401, ErroApi
+        auth.ts               registrar, login, logout
+        tarefas.ts            listar/criar/atualizar/excluir + tipos de filtro
+        categorias.ts         listar/criar/excluir
+      hooks/
+        useTarefas.ts         useTarefas(filtros), useCriarTarefa, etc.
+        useCategorias.ts      useCategorias, useCriarCategoria, useExcluirCategoria
+      tipos/
+        index.ts              Tarefa, Categoria, Usuario, EnvelopeErro
+      auth/
+        AuthContext.tsx       useAuth(): { usuario, token, entrar, sair }
+        RotaProtegida.tsx     redireciona p/ /login sem token
+      telas/
+        Login.tsx, Registro.tsx, Tarefas.tsx, Categorias.tsx
+      componentes/
+        FormularioTarefa.tsx, ItemTarefa.tsx,
+        FiltroTarefas.tsx, EstadoVazio.tsx
+      estilos/
+        tokens.css            variáveis CSS da identidade
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Convenções
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- TypeScript em tudo, sem ponto e vírgula (Prettier `semi: false`)
+- Domínio em português: `Tarefa`, `Categoria`, `Usuario`
+- Estado do servidor → TanStack Query (chaves `['tarefas', filtros]`,
+  `['categorias']`); mutations invalidam a chave-pai
+- Estado de interface (filtro, input, diálogo) → `useState` local
+- Cliente HTTP único (`api/client.ts`); telas não chamam `fetch`
+- Cores via tokens CSS (`var(--cor-destaque)`, etc); nunca hex direto
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Scripts
+
+    npm run dev      vite dev (HMR)
+    npm run build    tsc -b && vite build
+    npm run preview  serve a build de produção
+    npm run lint     eslint
+
+## Variáveis de ambiente
+
+| nome         | obrigatória | descrição                                 |
+|--------------|-------------|-------------------------------------------|
+| VITE_API_URL | não         | base da API; default `http://localhost:3000/api` |
+
+`.env` está no `.gitignore`. Há um `.env.example` para referência.
+
+## Token e segurança
+
+O token JWT é guardado em `localStorage`. Persiste entre F5; fica
+acessível a scripts da página, então a mitigação é não permitir XSS
+(React já escapa por padrão; não usar `dangerouslySetInnerHTML` com
+conteúdo não confiável). Decisão explicada em `specs/05-design-front.md`
+seção 9.
+
+## Fora de escopo
+
+Refresh tokens, recuperação de senha, edição de título de tarefa /
+nome de categoria, datas/lembretes. Ver specs/05 e specs/01 seção 6.

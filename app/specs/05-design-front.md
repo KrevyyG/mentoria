@@ -1,4 +1,4 @@
-# Design do Front-end — App de Tarefas
+# Design do Front-end — QAlificado - To Do
 
 Como o cliente consome o contrato (03-contrato-api.md). O back não muda.
 

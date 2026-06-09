@@ -4,9 +4,10 @@ Contexto fixo do projeto. Leia antes de qualquer tarefa.
 
 ## Visão geral
 
-App de tarefas multiusuário, criado para estudo e mentoria. Cada usuário
-acessa com sua conta e gerencia suas próprias tarefas e categorias.
-Idioma do produto e do código de domínio: português do Brasil.
+QAlificado - To Do: app de tarefas multiusuário, criado para estudo e
+mentoria. Cada usuário acessa com sua conta e gerencia suas próprias
+tarefas e categorias. Idioma do produto e do código de domínio:
+português do Brasil.
 
 ## Stack
 
@@ -34,19 +35,22 @@ Front-end:
     identidade-visual/     cores, tokens e logos
       identidade-visual.md
       (arquivos de logo e favicon)
-    back/                  aplicação NestJS
-    front/                 aplicação React + Vite
+    back/                  aplicação NestJS (ver back/CLAUDE.md)
+    front/                 aplicação React + Vite (ver front/CLAUDE.md)
+    PRD.md                 visão de produto consolidada
 
 ## Como rodar
 
-Back:
-- copiar .env (DATABASE_URL, DIRECT_URL, JWT_SECRET, JWT_EXPIRES_IN)
+Back (porta 3000):
+- copiar .env.example para .env e preencher (DATABASE_URL, DIRECT_URL,
+  JWT_SECRET, JWT_EXPIRES_IN)
 - npm install
 - npx prisma migrate dev
 - npm run start:dev
+- Swagger UI: http://localhost:3000/api/docs
 
-Front:
-- copiar .env (VITE_API_URL apontando para o back)
+Front (porta 5173):
+- copiar .env.example para .env (VITE_API_URL apontando para o back)
 - npm install
 - npm run dev
 
@@ -74,6 +78,9 @@ Seguir specs/06-tarefas.md em fatias verticais: primeiro a Fase 0
 (fundação), depois cada fatia de ponta a ponta (back + front), respeitando
 a Verificação ao fim de cada uma antes de avançar.
 
+Status atual: Fase 0 e Fatias 1 a 6 entregues e verificadas (todas as
+HUs cobertas). Detalhes em specs/06-tarefas.md.
+
 ## Decisões-chave (resumo; detalhes nas specs)
 
 - IDs em UUID (não enumeráveis) — 02-modelo-dados
@@ -83,6 +90,8 @@ a Verificação ao fim de cada uma antes de avançar.
 - Categoria da tarefa é opcional; excluir categoria deixa tarefas "sem
   categoria" (onDelete SetNull), sem apagá-las — 02, RN-06 e RN-07
 - Supabase é só o banco; toda a autenticação vive no NestJS — 04
+- Toda rota nova do back é documentada no Swagger no mesmo commit;
+  convenção em 04-design-back.md seção 11; UI em /api/docs
 
 ## Fora de escopo (por ora)
 

@@ -1,98 +1,96 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# QAlificado - To Do — Back
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API NestJS do app QAlificado - To Do. Multiusuário, autenticação JWT
+própria, Postgres no Supabase via Prisma.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+A verdade do projeto vive em `../specs/`. Este README cobre só o que é
+preciso para rodar e navegar o código.
 
-## Description
+## Stack
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- TypeScript, Node.js, NestJS
+- Prisma + PostgreSQL (Supabase)
+- JWT Bearer (passport-jwt), argon2
+- class-validator, class-transformer
+- Swagger via @nestjs/swagger
 
-## Project setup
+## Rodar local
 
-```bash
-$ npm install
-```
+Pré-requisitos: Node 20+ e um projeto no Supabase.
 
-## Compile and run the project
+    cp .env.example .env
+    # preencher DATABASE_URL, DIRECT_URL, JWT_SECRET, JWT_EXPIRES_IN
+    npm install
+    npx prisma migrate dev
+    npm run start:dev
 
-```bash
-# development
-$ npm run start
+- API: http://localhost:3000/api
+- Swagger UI: http://localhost:3000/api/docs
+- OpenAPI bruto: http://localhost:3000/api/docs-json
 
-# watch mode
-$ npm run start:dev
+DATABASE_URL é a conexão via pooler (porta 6543, `?pgbouncer=true`) usada
+em runtime. DIRECT_URL é a conexão direta (porta 5432) usada pelas
+migrações. Ver `specs/04-design-back.md` seção 9.
 
-# production mode
-$ npm run start:prod
-```
+## Estrutura
 
-## Run tests
+    src/
+      main.ts                      bootstrap (prefixo /api, pipes, filtro, swagger)
+      app.module.ts                módulo raiz
+      prisma/
+        prisma.service.ts
+        prisma.module.ts           @Global
+      common/
+        decorators/
+          usuario-atual.decorator.ts   @UsuarioAtual() → req.user.id
+        filters/
+          excecao-global.filter.ts     envelope { erro: { codigo, mensagem } }
+        swagger/
+          respostas-erro.ts            RespostaErroDto
+      auth/                        registro / login / logout, JwtStrategy, guard
+      categorias/                  POST/GET/DELETE com isolamento
+      tarefas/                     POST/GET/PATCH/DELETE com filtros
+    prisma/
+      schema.prisma                Usuario, Categoria, Tarefa
+      migrations/
 
-```bash
-# unit tests
-$ npm run test
+## Convenções
 
-# e2e tests
-$ npm run test:e2e
+- TypeScript em tudo, sem ponto e vírgula (Prettier `semi: false`)
+- Camadas: controller (HTTP) → service (regras) → Prisma. Regra de negócio
+  não fica no controller.
+- Isolamento por usuário: toda consulta sobre item específico usa
+  `where: { id, usuarioId }`; 0 linhas afetadas vira `NotFoundException`
+  (404), nunca 403. Ver specs/03 §7 e specs/04 §6.
+- DTOs declaram validação com class-validator; falha vira 400 codigo
+  `validacao` no envelope global.
+- Toda rota documentada no Swagger no mesmo commit em que é criada
+  (@ApiTags, @ApiOperation, @ApiResponse, @ApiBearerAuth quando protegida,
+  @ApiProperty nos DTOs). Ver specs/04 §11.
 
-# test coverage
-$ npm run test:cov
-```
+## Scripts
 
-## Deployment
+    npm run start:dev   watch mode
+    npm run start       roda 1x
+    npm run build       compila para dist/
+    npm run start:prod  roda dist/main.js
+    npm run lint        eslint --fix
+    npm run format      prettier --write
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Variáveis de ambiente
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+| nome           | obrigatória | descrição                                |
+|----------------|-------------|------------------------------------------|
+| DATABASE_URL   | sim         | Postgres via pooler (porta 6543)         |
+| DIRECT_URL     | sim         | Postgres direto (porta 5432, migrações)  |
+| JWT_SECRET     | sim         | segredo para assinar tokens              |
+| JWT_EXPIRES_IN | não         | validade do token (ex. `7d`); default 7d |
+| PORT           | não         | porta HTTP; default 3000                 |
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+`.env` está no `.gitignore`. Há um `.env.example` para referência.
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Fora de escopo
 
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Deploy, refresh tokens, recuperação de senha, verificação de e-mail,
+edição de título de tarefa / nome de categoria, datas/lembretes, rate
+limiting. Ver specs/04 §13.

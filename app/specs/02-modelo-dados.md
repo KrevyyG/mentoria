@@ -1,4 +1,4 @@
-# Modelo de Dados — App de Tarefas
+# Modelo de Dados — QAlificado - To Do
 
 ## 1. Entidades
 

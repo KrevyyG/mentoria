@@ -1,4 +1,4 @@
-# Requisitos — App de Tarefas
+# Requisitos — QAlificado - To Do
 
 ## 1. Visão geral
 

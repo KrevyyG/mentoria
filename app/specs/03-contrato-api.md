@@ -1,4 +1,4 @@
-# Contrato de API — App de Tarefas
+# Contrato de API — QAlificado - To Do
 
 ## 1. Convenções gerais
 

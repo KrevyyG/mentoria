@@ -1,6 +1,6 @@
-# PRD — App de Tarefas (QA)
+# PRD — QAlificado - To Do
 
-- Produto: App de Tarefas (multiusuário)
+- Produto: QAlificado - To Do (multiusuário)
 - Versão do documento: 1.0
 - Data: 08/06/2026
 - Status: definições fechadas, pronto para desenvolvimento
