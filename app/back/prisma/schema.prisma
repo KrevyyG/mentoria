@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Usuario {
+  id         String      @id @default(uuid()) @db.Uuid
+  email      String      @unique
+  senhaHash  String      @map("senha_hash")
+  criadoEm   DateTime    @default(now()) @map("criado_em")
+  categorias Categoria[]
+  tarefas    Tarefa[]
+
+  @@map("usuario")
+}
+
+model Categoria {
+  id        String   @id @default(uuid()) @db.Uuid
+  nome      String
+  usuarioId String   @map("usuario_id") @db.Uuid
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  criadoEm  DateTime @default(now()) @map("criado_em")
+  tarefas   Tarefa[]
+
+  @@unique([usuarioId, nome])
+  @@map("categoria")
+}
+
+model Tarefa {
+  id          String     @id @default(uuid()) @db.Uuid
+  titulo      String
+  concluida   Boolean    @default(false)
+  usuarioId   String     @map("usuario_id") @db.Uuid
+  usuario     Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  categoriaId String?    @map("categoria_id") @db.Uuid
+  categoria   Categoria? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  criadoEm    DateTime   @default(now()) @map("criado_em")
+
+  @@map("tarefa")
+}
